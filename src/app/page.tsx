@@ -1,65 +1,257 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuthStore } from '@/store/auth-store';
+import { toast } from 'sonner';
+import { Download, BarChart3, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+
+interface Group {
+  group_id: string;
+  name: string;
+  description?: string;
+  member_count?: number;
+  topics_count?: number;
+}
+
+export default function HomePage() {
+  const { token, setToken, isAuthenticated, clearToken } = useAuthStore();
+  const [inputToken, setInputToken] = useState('');
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleConnect = async () => {
+    if (!inputToken.trim()) {
+      toast.error('请输入 Token');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/groups', {
+        headers: {
+          'X-ZSXQ-Token': inputToken,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '连接失败');
+      }
+
+      const data = await response.json();
+      setGroups(data.groups || []);
+      setToken(inputToken);
+      toast.success('连接成功！');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '连接失败';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchGroups = async () => {
+    if (!token) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/groups', {
+        headers: {
+          'X-ZSXQ-Token': token,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('获取星球列表失败');
+      }
+
+      const data = await response.json();
+      setGroups(data.groups || []);
+    } catch {
+      toast.error('获取星球列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 如果已经有 token，自动获取星球列表
+  useEffect(() => {
+    if (isAuthenticated()) {
+      fetchGroups();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="container py-8">
+      {/* Token 输入区域 */}
+      {!isAuthenticated() && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>连接知识星球</CardTitle>
+            <CardDescription>
+              请输入你的知识星球 Token 以开始使用。
+              <a
+                href="https://github.com/your-repo/zsxq-exporter#get-token"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-1 text-primary hover:underline"
+              >
+                如何获取 Token?
+              </a>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label htmlFor="token" className="sr-only">
+                  Token
+                </Label>
+                <Input
+                  id="token"
+                  type="password"
+                  placeholder="请输入知识星球 Token"
+                  value={inputToken}
+                  onChange={(e) => setInputToken(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
+                />
+              </div>
+              <Button onClick={handleConnect} disabled={loading}>
+                {loading ? '连接中...' : '连接'}
+              </Button>
+            </div>
+            {error && (
+              <p className="mt-2 text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="h-4 w-4" />
+                {error}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 已连接状态 */}
+      {isAuthenticated() && (
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <span className="text-sm text-muted-foreground">已连接知识星球</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              clearToken();
+              setGroups([]);
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            断开连接
+          </Button>
         </div>
-      </main>
+      )}
+
+      {/* 功能入口 */}
+      <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <Link href="/export">
+          <Card className="h-full cursor-pointer transition-colors hover:bg-accent">
+            <CardHeader>
+              <Download className="h-8 w-8 mb-2 text-primary" />
+              <CardTitle>导出内容</CardTitle>
+              <CardDescription>
+                选择时间范围，将星球帖子导出为 Markdown 文件，包含图片
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/analyze">
+          <Card className="h-full cursor-pointer transition-colors hover:bg-accent">
+            <CardHeader>
+              <BarChart3 className="h-8 w-8 mb-2 text-primary" />
+              <CardTitle>内容分析</CardTitle>
+              <CardDescription>
+                使用 AI 分析内容，生成复盘报告、关键词提取、趋势分析
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/generate">
+          <Card className="h-full cursor-pointer transition-colors hover:bg-accent">
+            <CardHeader>
+              <Sparkles className="h-8 w-8 mb-2 text-primary" />
+              <CardTitle>智能生成</CardTitle>
+              <CardDescription>
+                基于历史内容风格，生成年度总结、月度复盘或新帖子
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+      </div>
+
+      {/* 星球列表 */}
+      {isAuthenticated() && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">我的星球</h2>
+          {loading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full mt-2" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-4 w-1/2" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : groups.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {groups.map((group) => (
+                <Card key={group.group_id}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{group.name}</CardTitle>
+                    {group.description && (
+                      <CardDescription className="line-clamp-2">
+                        {group.description}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2">
+                      {group.member_count !== undefined && (
+                        <Badge variant="secondary">{group.member_count} 成员</Badge>
+                      )}
+                      {group.topics_count !== undefined && (
+                        <Badge variant="outline">{group.topics_count} 帖子</Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                暂无星球数据，请检查 Token 是否有效
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }

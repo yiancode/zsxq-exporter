@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ZSXQ Exporter
 
-## Getting Started
+知识星球内容导出与 AI 分析工具。
 
-First, run the development server:
+## 功能特性
+
+- **内容导出**：按时间范围导出星球帖子为 Markdown 文件，包含本地化图片
+- **内容分析**：使用 Claude AI 分析内容，生成复盘报告、关键词提取
+- **智能生成**：学习历史内容风格，生成年度总结、月度复盘或新帖子
+
+## 技术栈
+
+- **框架**: Next.js 16 (App Router)
+- **UI**: Tailwind CSS + Shadcn/ui
+- **状态**: Zustand
+- **SDK**: zsxq-sdk（本地链接）
+- **AI**: Claude API (@anthropic-ai/sdk)
+- **数据库**: SQLite (better-sqlite3)
+
+## 快速开始
+
+### 1. 安装依赖
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. 配置环境变量
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+复制环境变量示例文件：
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.local.example .env.local
+```
 
-## Learn More
+编辑 `.env.local`，填入你的配置：
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# 知识星球 Token（可选，也可以通过 UI 输入）
+ZSXQ_TOKEN=your_zsxq_token_here
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Claude API Key（用于 AI 功能）
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. 获取知识星球 Token
 
-## Deploy on Vercel
+1. 登录 [知识星球网页版](https://wx.zsxq.com)
+2. 打开浏览器开发者工具（F12）
+3. 切换到 Application / Storage 标签
+4. 找到 Cookies 中的 `zsxq_access_token` 值
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. 启动开发服务器
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm dev
+```
+
+访问 http://localhost:3000
+
+## 项目结构
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── page.tsx           # 首页
+│   ├── export/            # 导出页面
+│   ├── analyze/           # 分析页面
+│   ├── generate/          # 生成页面
+│   └── api/               # API 路由
+├── components/            # UI 组件
+│   ├── ui/               # Shadcn/ui 组件
+│   └── layout/           # 布局组件
+├── lib/                   # 核心库
+│   ├── zsxq/             # zsxq-sdk 封装
+│   ├── export/           # 导出逻辑
+│   ├── ai/               # Claude 集成
+│   └── db/               # 数据库
+├── store/                 # Zustand 状态
+└── types/                 # TypeScript 类型
+```
+
+## 开发进度
+
+- [x] 项目初始化
+- [x] 基础 UI 框架
+- [x] 星球列表获取
+- [x] 帖子分页获取
+- [x] 帖子数据缓存
+- [x] 导出任务管理
+- [x] Markdown 转换
+- [x] 图片下载
+- [x] ZIP 打包
+- [ ] AI 分析功能
+- [ ] 内容生成功能
+
+## 相关项目
+
+- [zsxq-sdk](../zsxq-sdk) - 知识星球 TypeScript SDK
+
+## License
+
+MIT

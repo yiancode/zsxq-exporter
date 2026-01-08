@@ -103,27 +103,34 @@
 
 ---
 
-### 阶段四：Claude AI 集成 ⏳ 待开发
+### 阶段四：Claude AI 集成 ✅ 完成
 
-**目标**: 封装 Claude API 调用
+**完成时间**: 2026-01-09
 
-**待完成**:
-- [ ] Claude SDK 封装
-  - 配置管理
-  - 错误处理
-  - 流式响应
-- [ ] 长文本分片处理
-- [ ] 提示词模板
-  - 内容复盘
-  - 年度总结
-  - 风格分析
+**完成内容**:
+- [x] Claude SDK 封装
+  - 配置管理（API Key、模型选择）
+  - 统一错误处理（401/429/500 等状态码）
+  - 流式响应（onToken/onComplete 回调）
+  - 便捷方法（ask/askStream）
+- [x] 长文本分片处理
+  - Token 估算（中文/英文混合）
+  - 智能分片（段落/句子/标题边界）
+  - 分片重叠保持上下文
+  - 帖子格式化工具函数
+- [x] 提示词模板
+  - 内容分析（复盘/关键词/话题/洞察）
+  - 年度/月度/季度总结
+  - 风格学习与内容生成
+  - 续写/改写功能
 
-**关键文件待创建**:
-- `src/lib/ai/client.ts`
-- `src/lib/ai/chunker.ts`
-- `src/lib/ai/prompts/analyze.ts`
-- `src/lib/ai/prompts/summary.ts`
-- `src/lib/ai/prompts/style-write.ts`
+**关键文件**:
+- `src/lib/ai/client.ts` - Claude SDK 封装
+- `src/lib/ai/chunker.ts` - 长文本分片处理
+- `src/lib/ai/prompts/analyze.ts` - 内容分析提示词
+- `src/lib/ai/prompts/summary.ts` - 总结提示词
+- `src/lib/ai/prompts/style-write.ts` - 风格学习提示词
+- `src/lib/ai/index.ts` - 模块导出
 
 ---
 

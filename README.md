@@ -96,7 +96,11 @@ src/
 
 ## 相关项目
 
-- [zsxq-sdk](../zsxq-sdk) - 知识星球 TypeScript SDK
+- [zsxq-sdk](https://github.com/yiancode/zsxq-sdk) - 知识星球 TypeScript SDK
+
+## GitHub
+
+https://github.com/yiancode/zsxq-exporter
 
 ## License
 

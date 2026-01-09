@@ -215,33 +215,45 @@ export default function GeneratePage() {
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (line.startsWith('event: ')) {
-            const event = line.slice(7);
-            const dataLine = lines[lines.indexOf(line) + 1];
-            if (dataLine?.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(dataLine.slice(6));
+        // SSE 消息以双换行符分隔
+        const messages = buffer.split('\n\n');
+        buffer = messages.pop() || ''; // 保留不完整的消息
 
-                if (event === 'token') {
-                  setGeneratedContent(prev => prev + data.content);
-                } else if (event === 'status') {
-                  setGenerationStatus(data.message);
-                } else if (event === 'error') {
-                  setGenerationError(data.message);
-                  setIsGenerating(false);
-                  return;
-                } else if (event === 'done') {
-                  setIsGenerating(false);
-                  toast.success('生成完成');
-                  return;
-                }
-              } catch {
-                // 忽略解析错误
+        for (const message of messages) {
+          if (!message.trim()) continue;
+
+          const lines = message.split('\n');
+          let eventType = '';
+          let eventData = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              eventType = line.slice(7);
+            } else if (line.startsWith('data: ')) {
+              eventData = line.slice(6);
+            }
+          }
+
+          if (eventType && eventData) {
+            try {
+              const data = JSON.parse(eventData);
+
+              if (eventType === 'token') {
+                setGeneratedContent(prev => prev + data.content);
+              } else if (eventType === 'status') {
+                setGenerationStatus(data.message);
+              } else if (eventType === 'error') {
+                setGenerationError(data.message);
+                setIsGenerating(false);
+                return;
+              } else if (eventType === 'done') {
+                setIsGenerating(false);
+                toast.success('生成完成');
+                return;
               }
+            } catch {
+              // 忽略解析错误
             }
           }
         }

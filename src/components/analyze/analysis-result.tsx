@@ -100,40 +100,48 @@ export function AnalysisResult({
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
+        // SSE 消息以双换行符分隔
+        const messages = buffer.split('\n\n');
+        buffer = messages.pop() || ''; // 保留不完整的消息
 
-              if (data.meta) {
-                setMeta(data.meta);
-              } else if (data.content) {
-                setContent(prev => prev + data.content);
-              } else if (data.done) {
-                setStatus('completed');
-              } else if (data.error) {
-                throw new Error(data.error);
+        for (const message of messages) {
+          if (!message.trim()) continue;
+
+          // 解析每条 SSE 消息
+          const lines = message.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                if (data.meta) {
+                  setMeta(data.meta);
+                } else if (data.content) {
+                  setContent(prev => prev + data.content);
+                } else if (data.done) {
+                  setStatus('completed');
+                } else if (data.error) {
+                  throw new Error(data.error);
+                }
+              } catch (e) {
+                // 忽略 JSON 解析错误
+                if (e instanceof SyntaxError) continue;
+                throw e;
               }
-            } catch (e) {
-              // 忽略 JSON 解析错误
-              if (e instanceof SyntaxError) continue;
-              throw e;
             }
           }
         }
       }
 
-      if (status !== 'completed') {
-        setStatus('completed');
-      }
+      setStatus('completed');
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         return;

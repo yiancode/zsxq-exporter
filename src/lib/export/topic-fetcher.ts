@@ -149,7 +149,20 @@ export async function fetchAndCacheTopics(
       imagesCount: totalImages,
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : '获取帖子失败';
+    console.error('[topic-fetcher] 获取帖子失败:', error);
+    // 检查是否是 zsxq-sdk 的错误
+    const zsxqError = error as { code?: number; message?: string };
+    let message = error instanceof Error ? error.message : '获取帖子失败';
+
+    // 处理常见错误码
+    if (zsxqError.code === 1059) {
+      message = 'Token 无效或已过期，请重新连接知识星球';
+    } else if (zsxqError.code === 401 || zsxqError.code === 1001) {
+      message = 'Token 已过期，请重新获取';
+    } else if (zsxqError.code) {
+      message = `知识星球 API 错误 (${zsxqError.code}): ${zsxqError.message || '未知错误'}`;
+    }
+
     return {
       success: false,
       topicsCount: totalFetched,

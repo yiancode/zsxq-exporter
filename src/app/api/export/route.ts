@@ -138,6 +138,11 @@ export async function POST(request: NextRequest) {
     // 异步开始完整导出流程
     startFullExportProcess(exportId, token, task).catch(error => {
       console.error(`导出任务 ${exportId} 失败:`, error);
+      // 检查是否是 zsxq-sdk 的错误
+      const zsxqError = error as { code?: number; message?: string };
+      if (zsxqError.code) {
+        console.error(`错误码: ${zsxqError.code}, 消息: ${zsxqError.message}`);
+      }
     });
 
     return NextResponse.json({
@@ -271,8 +276,17 @@ async function startFullExportProcess(
     scheduleCleanup(exportId);
 
   } catch (error) {
+    console.error(`[导出任务 ${exportId}] 执行出错:`, error);
+    // 检查是否是 zsxq-sdk 的错误
+    const zsxqError = error as { code?: number; message?: string };
+    let errorMessage = error instanceof Error ? error.message : '导出过程出错';
+    if (zsxqError.code === 1059) {
+      errorMessage = 'Token 无效或已过期，请重新连接';
+    } else if (zsxqError.code) {
+      errorMessage = `错误码 ${zsxqError.code}: ${zsxqError.message || '未知错误'}`;
+    }
     task.status = 'failed';
-    task.error = error instanceof Error ? error.message : '导出过程出错';
+    task.error = errorMessage;
     task.progress.current_step = '导出失败';
     updateExportStatus(exportId, 'failed');
     scheduleCleanup(exportId);

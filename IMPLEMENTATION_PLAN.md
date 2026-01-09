@@ -134,31 +134,85 @@
 
 ---
 
-### 阶段五：内容分析与生成功能 ⏳ 待开发
+### 阶段五A：AI 分析功能 ✅ 完成
 
-**目标**: 实现完整的 AI 分析和生成功能
+**完成时间**: 2026-01-10
 
-**待完成**:
-- [ ] 分析页面完善
-  - 内容选择器
-  - 分析类型选择
-  - 结果展示
-- [ ] 生成页面完善
-  - 参考内容选择
-  - 风格学习
-  - 新内容生成
-- [ ] API 实现
-  - POST /api/ai/analyze
-  - POST /api/ai/generate
-- [ ] 流式输出展示
+**完成内容**:
+- [x] 分析页面完善
+  - 内容选择器（星球选择、日期范围、内容范围）
+  - 分析类型选择（复盘、关键词、话题、洞察）
+  - 流式结果展示（实时输出、复制、下载）
+- [x] API 实现
+  - POST /api/ai/analyze（流式输出）
+  - GET /api/ai/analyze（预览信息）
+- [x] 长文本分片处理
+  - 自动检测内容长度
+  - 分片分析 + 汇总
 
-**关键文件待创建**:
-- `src/app/api/ai/analyze/route.ts`
-- `src/app/api/ai/generate/route.ts`
-- `src/components/analyze/content-selector.tsx`
-- `src/components/analyze/analysis-result.tsx`
-- `src/components/generate/style-selector.tsx`
-- `src/components/generate/content-editor.tsx`
+**关键文件**:
+- `src/app/api/ai/analyze/route.ts` - AI 分析 API
+- `src/components/analyze/content-selector.tsx` - 内容选择器
+- `src/components/analyze/analysis-type-selector.tsx` - 分析类型选择
+- `src/components/analyze/analysis-result.tsx` - 结果展示组件
+- `src/app/analyze/page.tsx` - 分析页面
+
+---
+
+### 阶段五B：内容生成功能 ✅ 完成
+
+**完成时间**: 2026-01-10
+
+**完成内容**:
+- [x] 生成页面完善
+  - 生成类型选择（总结、风格创作、续写、改写）
+  - 内容来源选择（复用 ContentSelector）
+  - 总结配置（年度/月度/季度、写作风格）
+  - 创作配置（主题、关键词、长度、语气）
+  - 续写/改写配置
+- [x] API 实现
+  - POST /api/ai/generate（流式输出）
+  - GET /api/ai/generate（预览信息）
+  - 风格学习 + 内容生成流程
+  - 长文本分片处理
+- [x] 流式输出展示
+  - 实时内容显示
+  - 状态提示
+  - 复制/下载功能
+
+**关键文件**:
+- `src/app/api/ai/generate/route.ts` - 内容生成 API
+- `src/components/generate/generate-type-selector.tsx` - 生成类型选择
+- `src/components/generate/summary-options.tsx` - 总结配置
+- `src/components/generate/content-options.tsx` - 创作配置
+- `src/components/generate/rewrite-options.tsx` - 续写/改写配置
+- `src/components/generate/generate-result.tsx` - 结果展示
+- `src/app/generate/page.tsx` - 生成页面
+
+---
+
+### 阶段六：多 AI 服务支持 ✅ 完成
+
+**完成时间**: 2026-01-10
+
+**完成内容**:
+- [x] 统一 AI 客户端接口
+  - 支持 Anthropic (Claude) 和 DeepSeek
+  - 自动检测可用的 AI 服务
+  - 流式响应支持
+- [x] 更新分析和生成 API
+  - 支持 provider 参数选择 AI 服务
+  - 返回使用的提供商和模型信息
+- [x] 前端 AI 服务选择器
+  - 分析页面可选择 AI 服务
+  - 生成页面可选择 AI 服务
+  - 显示各服务特点说明
+
+**关键文件**:
+- `src/lib/ai/client.ts` - 统一 AI 客户端（支持多提供商）
+- `src/components/ai/provider-selector.tsx` - AI 服务选择组件
+- `src/app/api/ai/analyze/route.ts` - 分析 API（已更新）
+- `src/app/api/ai/generate/route.ts` - 生成 API（已更新）
 
 ---
 
@@ -172,6 +226,7 @@
 | 状态 | Zustand | 5.x |
 | SDK | zsxq-sdk | 1.0.1 (本地链接) |
 | AI | @anthropic-ai/sdk | 0.71.2 |
+| AI | openai (DeepSeek) | 6.15.0 |
 | 数据库 | better-sqlite3 | 12.5.0 |
 | 打包 | archiver | 7.0.1 |
 
@@ -180,7 +235,10 @@
 ```bash
 # .env.local
 ZSXQ_TOKEN=your_token
-ANTHROPIC_API_KEY=your_api_key
+
+# AI 服务（至少配置一个）
+DEEPSEEK_API_KEY=your_deepseek_key   # 推荐，便宜
+ANTHROPIC_API_KEY=your_anthropic_key  # 可选，质量高
 ```
 
 ## 启动命令
@@ -193,4 +251,4 @@ pnpm start    # 生产模式
 
 ---
 
-*最后更新: 2026-01-09*
+*最后更新: 2026-01-10 - 阶段六完成（多 AI 服务支持）*

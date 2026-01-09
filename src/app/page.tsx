@@ -26,6 +26,12 @@ export default function HomePage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // 确保客户端 hydration 完成后再渲染依赖认证状态的内容
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleConnect = async () => {
     if (!inputToken.trim()) {
@@ -93,10 +99,26 @@ export default function HomePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 用于条件渲染的认证状态（仅在客户端 mounted 后才检查）
+  const isLoggedIn = mounted && isAuthenticated();
+
   return (
     <div className="container py-8">
-      {/* Token 输入区域 */}
-      {!isAuthenticated() && (
+      {/* Token 输入区域 - mounted 前显示骨架屏避免 hydration 不匹配 */}
+      {!mounted ? (
+        <Card className="mb-8">
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-64 mt-2" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <Skeleton className="h-10 flex-1" />
+              <Skeleton className="h-10 w-20" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : !isLoggedIn ? (
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>连接知识星球</CardTitle>
@@ -139,10 +161,10 @@ export default function HomePage() {
             )}
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       {/* 已连接状态 */}
-      {isAuthenticated() && (
+      {isLoggedIn && (
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -201,7 +223,7 @@ export default function HomePage() {
       </div>
 
       {/* 星球列表 */}
-      {isAuthenticated() && (
+      {isLoggedIn && (
         <div>
           <h2 className="text-xl font-semibold mb-4">我的星球</h2>
           {loading ? (
@@ -221,26 +243,28 @@ export default function HomePage() {
           ) : groups.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {groups.map((group) => (
-                <Card key={group.group_id}>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{group.name}</CardTitle>
-                    {group.description && (
-                      <CardDescription className="line-clamp-2">
-                        {group.description}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-2">
-                      {group.member_count !== undefined && (
-                        <Badge variant="secondary">{group.member_count} 成员</Badge>
+                <Link key={group.group_id} href={`/export?groupId=${group.group_id}`}>
+                  <Card className="h-full cursor-pointer transition-colors hover:bg-accent hover:shadow-md">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{group.name}</CardTitle>
+                      {group.description && (
+                        <CardDescription className="line-clamp-2">
+                          {group.description}
+                        </CardDescription>
                       )}
-                      {group.topics_count !== undefined && (
-                        <Badge variant="outline">{group.topics_count} 帖子</Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-2">
+                        {group.member_count !== undefined && (
+                          <Badge variant="secondary">{group.member_count} 成员</Badge>
+                        )}
+                        {group.topics_count !== undefined && (
+                          <Badge variant="outline">{group.topics_count} 帖子</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           ) : (

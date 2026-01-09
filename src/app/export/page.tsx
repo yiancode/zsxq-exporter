@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,6 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/store/auth-store';
 import { toast } from 'sonner';
 import { CalendarIcon, Download, Loader2, ArrowLeft, CheckCircle2, XCircle, Clock } from 'lucide-react';
@@ -46,8 +48,9 @@ interface ExportTask {
   error?: string;
 }
 
-export default function ExportPage() {
+function ExportPageContent() {
   const { token, isAuthenticated } = useAuthStore();
+  const searchParams = useSearchParams();
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [startDate, setStartDate] = useState<Date>();
@@ -60,9 +63,18 @@ export default function ExportPage() {
   const [progressText, setProgressText] = useState('');
   const [exportHistory, setExportHistory] = useState<ExportRecord[]>([]);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // 确保客户端 hydration 完成
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 从 URL 参数获取预选的 groupId
+  const preselectedGroupId = searchParams.get('groupId');
 
   useEffect(() => {
-    if (isAuthenticated() && token) {
+    if (mounted && isAuthenticated() && token) {
       fetchGroups();
       fetchExportHistory();
     }
@@ -72,7 +84,17 @@ export default function ExportPage() {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mounted]);
+
+  // 当 groups 加载完成且有预选 groupId 时，自动选中
+  useEffect(() => {
+    if (preselectedGroupId && groups.length > 0 && !selectedGroup) {
+      const found = groups.find(g => g.group_id === preselectedGroupId);
+      if (found) {
+        setSelectedGroup(preselectedGroupId);
+      }
+    }
+  }, [preselectedGroupId, groups, selectedGroup]);
 
   const fetchGroups = async () => {
     setLoading(true);
@@ -274,7 +296,23 @@ export default function ExportPage() {
     }
   };
 
-  if (!isAuthenticated()) {
+  // 用于条件渲染的认证状态（仅在客户端 mounted 后才检查）
+  const isLoggedIn = mounted && isAuthenticated();
+
+  // 未 mounted 时显示加载状态避免 hydration 不匹配
+  if (!mounted) {
+    return (
+      <div className="container py-8">
+        <Card>
+          <CardContent className="py-8 text-center">
+            <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
     return (
       <div className="container py-8">
         <Card>
@@ -465,5 +503,51 @@ export default function ExportPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 加载骨架屏
+function ExportPageSkeleton() {
+  return (
+    <div className="container py-8">
+      <div className="mb-6">
+        <Skeleton className="h-4 w-20" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-64 mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Skeleton className="h-10 w-full" />
+              <div className="grid gap-4 md:grid-cols-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-24" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-40 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// 使用 Suspense 包装的导出组件
+export default function ExportPage() {
+  return (
+    <Suspense fallback={<ExportPageSkeleton />}>
+      <ExportPageContent />
+    </Suspense>
   );
 }

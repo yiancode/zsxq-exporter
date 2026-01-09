@@ -28,11 +28,27 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('获取星球列表失败:', error);
 
+    // 检查是否是 zsxq-sdk 的错误
+    const zsxqError = error as { code?: number; message?: string };
+
+    // 常见的认证相关错误码
+    // 1059: 内部错误（通常是 Token 无效）
+    // 401: 未授权
+    // 1001: Token 过期
+    const authErrorCodes = [1059, 401, 1001, 1002];
+
+    if (zsxqError.code && authErrorCodes.includes(zsxqError.code)) {
+      return NextResponse.json(
+        { error: 'Token 无效或已过期，请重新获取 Token' },
+        { status: 401 }
+      );
+    }
+
     const message = error instanceof Error ? error.message : '获取星球列表失败';
 
-    // 根据错误类型返回不同状态码
-    if (message.includes('Token') || message.includes('认证')) {
-      return NextResponse.json({ error: 'Token 无效或已过期' }, { status: 401 });
+    // 根据错误消息判断
+    if (message.includes('Token') || message.includes('认证') || message.includes('内部错误')) {
+      return NextResponse.json({ error: 'Token 无效或已过期，请重新获取 Token' }, { status: 401 });
     }
 
     return NextResponse.json({ error: message }, { status: 500 });

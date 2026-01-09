@@ -156,11 +156,22 @@ export async function fetchAndCacheTopics(
 
     // 处理常见错误码
     if (zsxqError.code === 1059) {
-      message = 'Token 无效或已过期，请重新连接知识星球';
+      message = 'API 访问受限（可能是历史数据限制）';
     } else if (zsxqError.code === 401 || zsxqError.code === 1001) {
       message = 'Token 已过期，请重新获取';
     } else if (zsxqError.code) {
       message = `知识星球 API 错误 (${zsxqError.code}): ${zsxqError.message || '未知错误'}`;
+    }
+
+    // 如果已经获取了一些帖子，返回部分成功
+    if (totalFetched > 0) {
+      console.log(`[topic-fetcher] 部分成功: 已获取 ${totalFetched} 条帖子，${message}`);
+      return {
+        success: true, // 标记为成功，让导出流程继续
+        topicsCount: totalFetched,
+        imagesCount: totalImages,
+        error: `部分获取: ${message}（已获取 ${totalFetched} 条）`,
+      };
     }
 
     return {

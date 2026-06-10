@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { FileText, Calendar, Sparkles, Edit3, RefreshCw } from 'lucide-react';
+import { Calendar, Sparkles, Edit3, RefreshCw } from 'lucide-react';
 
 export type GenerateType = 'summary' | 'generate' | 'continuation' | 'rewrite';
 
@@ -40,43 +40,42 @@ const generateTypes = [
 
 export function GenerateTypeSelector({ value, onChange }: GenerateTypeSelectorProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          选择生成类型
-        </CardTitle>
-        <CardDescription>
-          选择你想要生成的内容类型
-        </CardDescription>
+    <Card className="shadow-none">
+      <CardHeader className="border-b">
+        <CardTitle className="text-xl">选择生成类型</CardTitle>
+        <CardDescription>选择你想要生成的内容类型</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-3 md:grid-cols-2">
-          {generateTypes.map(({ type, title, description, icon: Icon }) => (
-            <button
-              key={type}
-              onClick={() => onChange(type)}
-              className={cn(
-                'flex items-start gap-3 rounded-lg border p-4 text-left transition-colors',
-                value === type
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-primary/50 hover:bg-accent'
-              )}
-            >
-              <div
+          {generateTypes.map(({ type, title, description, icon: Icon }) => {
+            const active = value === type;
+            return (
+              <button
+                key={type}
+                onClick={() => onChange(type)}
+                aria-pressed={active}
                 className={cn(
-                  'rounded-md p-2',
-                  value === type ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  'flex items-start gap-3 rounded-lg border p-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  active
+                    ? 'border-primary ring-1 ring-primary'
+                    : 'border-border hover:bg-muted/50'
                 )}
               >
-                <Icon className="h-4 w-4" />
-              </div>
-              <div className="flex-1">
-                <div className="font-medium">{title}</div>
-                <div className="text-sm text-muted-foreground">{description}</div>
-              </div>
-            </button>
-          ))}
+                <span
+                  className={cn(
+                    'flex size-9 shrink-0 items-center justify-center rounded-full transition-colors',
+                    active ? 'bg-primary text-primary-foreground' : 'bg-accent text-primary'
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="flex-1">
+                  <div className="font-medium">{title}</div>
+                  <div className="text-sm text-muted-foreground">{description}</div>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

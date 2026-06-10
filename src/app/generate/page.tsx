@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth-store';
@@ -282,10 +281,10 @@ export default function GeneratePage() {
   // 未 mounted 时显示加载状态避免 hydration 不匹配
   if (!mounted) {
     return (
-      <div className="container py-8">
-        <Card>
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <Card className="shadow-none">
           <CardContent className="py-12 text-center">
-            <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
           </CardContent>
         </Card>
       </div>
@@ -295,16 +294,10 @@ export default function GeneratePage() {
   // 未登录提示
   if (!isLoggedIn) {
     return (
-      <div className="container py-8">
-        <div className="mb-6">
-          <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            返回首页
-          </Link>
-        </div>
-        <Card>
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <Card className="shadow-none">
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">请先在首页连接知识星球</p>
+            <p className="mb-4 text-muted-foreground">请先在首页连接知识星球</p>
             <Link href="/">
               <Button>去连接</Button>
             </Link>
@@ -315,118 +308,104 @@ export default function GeneratePage() {
   }
 
   return (
-    <div className="container py-8">
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          返回首页
-        </Link>
-      </div>
-
-      {/* 页面标题 */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6" />
-          智能生成
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          基于历史内容风格，使用 AI 生成总结、新帖子或续写内容
+    <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-12">
+      {/* 居中页头 */}
+      <header className="text-center">
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">智能生成</h1>
+        <p className="mx-auto mt-3 max-w-2xl text-lg text-muted-foreground">
+          根据你的个人风格，将碎片化灵感转化为系统性文稿。
         </p>
-      </div>
+      </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* 左侧配置区 */}
-        <div className="space-y-6">
-          {/* 生成类型选择 */}
-          <GenerateTypeSelector value={generateType} onChange={setGenerateType} />
+      {/* 文稿配置 */}
+      <div className="space-y-6">
+        {/* 生成类型选择 */}
+        <GenerateTypeSelector value={generateType} onChange={setGenerateType} />
 
-          {/* 内容来源选择 */}
-          {loadingGroups ? (
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-4 w-48" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-10 w-full" />
-              </CardContent>
-            </Card>
-          ) : (
-            <ContentSelector
-              groups={groups}
-              onSelectionChange={setContentSelection}
-              disabled={isGenerating}
-            />
-          )}
-
-          {/* 根据类型显示不同的配置面板 */}
-          {generateType === 'summary' && (
-            <SummaryOptions value={summaryOptions} onChange={setSummaryOptions} />
-          )}
-
-          {generateType === 'generate' && (
-            <ContentOptions value={contentOptions} onChange={setContentOptions} />
-          )}
-
-          {generateType === 'continuation' && (
-            <ContinuationOptions value={continuationOptions} onChange={setContinuationOptions} />
-          )}
-
-          {generateType === 'rewrite' && (
-            <RewriteOptions value={rewriteOptions} onChange={setRewriteOptions} />
-          )}
-
-          {/* AI 服务选择 */}
-          {generateType && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">AI 服务</CardTitle>
-                <CardDescription>选择用于生成的 AI 模型</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProviderSelector
-                  value={provider}
-                  onChange={setProvider}
-                  disabled={isGenerating}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 生成按钮 */}
-          {generateType && (
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={handleGenerate}
-              disabled={isGenerating || !contentSelection?.groupId}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  生成中...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  开始生成
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-
-        {/* 右侧结果区 */}
-        <div>
-          <GenerateResult
-            isGenerating={isGenerating}
-            content={generatedContent}
-            status={generationStatus}
-            error={generationError}
-            onRetry={handleGenerate}
+        {/* 内容来源选择 */}
+        {loadingGroups ? (
+          <Card className="shadow-none">
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        ) : (
+          <ContentSelector
+            groups={groups}
+            onSelectionChange={setContentSelection}
+            disabled={isGenerating}
           />
-        </div>
+        )}
+
+        {/* 根据类型显示不同的配置面板 */}
+        {generateType === 'summary' && (
+          <SummaryOptions value={summaryOptions} onChange={setSummaryOptions} />
+        )}
+
+        {generateType === 'generate' && (
+          <ContentOptions value={contentOptions} onChange={setContentOptions} />
+        )}
+
+        {generateType === 'continuation' && (
+          <ContinuationOptions value={continuationOptions} onChange={setContinuationOptions} />
+        )}
+
+        {generateType === 'rewrite' && (
+          <RewriteOptions value={rewriteOptions} onChange={setRewriteOptions} />
+        )}
+
+        {/* AI 服务选择 */}
+        {generateType && (
+          <Card className="shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">AI 服务</CardTitle>
+              <CardDescription>选择用于生成的 AI 模型</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProviderSelector
+                value={provider}
+                onChange={setProvider}
+                disabled={isGenerating}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 生成按钮 */}
+        {generateType && (
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={handleGenerate}
+            disabled={isGenerating || !contentSelection?.groupId}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                开始生成
+              </>
+            )}
+          </Button>
+        )}
       </div>
+
+      {/* 结果文章 */}
+      <GenerateResult
+        isGenerating={isGenerating}
+        content={generatedContent}
+        status={generationStatus}
+        error={generationError}
+        onRetry={handleGenerate}
+      />
     </div>
   );
 }

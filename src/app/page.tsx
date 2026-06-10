@@ -103,7 +103,17 @@ export default function HomePage() {
   const isLoggedIn = mounted && isAuthenticated();
 
   return (
-    <div className="container py-8">
+    <div className="container mx-auto max-w-5xl py-12">
+      {/* 编辑风开场 —— 衬线标题 + 一句副文 */}
+      <header className="mb-10">
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          把你的星球，存成可读的文字
+        </h1>
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
+          导出知识星球帖子为 Markdown，再用 AI 帮你复盘、提炼、续写。像整理一本属于自己的合集。
+        </p>
+      </header>
+
       {/* Token 输入区域 - mounted 前显示骨架屏避免 hydration 不匹配 */}
       {!mounted ? (
         <Card className="mb-8">
@@ -167,7 +177,7 @@ export default function HomePage() {
       {isLoggedIn && (
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <CheckCircle2 className="h-5 w-5 text-primary" />
             <span className="text-sm text-muted-foreground">已连接知识星球</span>
           </div>
           <Button
@@ -186,7 +196,7 @@ export default function HomePage() {
       {/* 功能入口 */}
       <div className="grid gap-6 md:grid-cols-3 mb-8">
         <Link href="/export">
-          <Card className="h-full cursor-pointer transition-colors hover:bg-accent">
+          <Card className="group h-full cursor-pointer border-border/80 transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
             <CardHeader>
               <Download className="h-8 w-8 mb-2 text-primary" />
               <CardTitle>导出内容</CardTitle>
@@ -198,7 +208,7 @@ export default function HomePage() {
         </Link>
 
         <Link href="/analyze">
-          <Card className="h-full cursor-pointer transition-colors hover:bg-accent">
+          <Card className="group h-full cursor-pointer border-border/80 transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
             <CardHeader>
               <BarChart3 className="h-8 w-8 mb-2 text-primary" />
               <CardTitle>内容分析</CardTitle>
@@ -210,7 +220,7 @@ export default function HomePage() {
         </Link>
 
         <Link href="/generate">
-          <Card className="h-full cursor-pointer transition-colors hover:bg-accent">
+          <Card className="group h-full cursor-pointer border-border/80 transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
             <CardHeader>
               <Sparkles className="h-8 w-8 mb-2 text-primary" />
               <CardTitle>智能生成</CardTitle>
@@ -225,7 +235,7 @@ export default function HomePage() {
       {/* 星球列表 */}
       {isLoggedIn && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">我的星球</h2>
+          <h2 className="mb-5 text-2xl font-semibold tracking-tight">我的星球</h2>
           {loading ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3].map((i) => (
@@ -244,9 +254,9 @@ export default function HomePage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {groups.map((group) => (
                 <Link key={group.group_id} href={`/export?groupId=${group.group_id}`}>
-                  <Card className="h-full cursor-pointer transition-colors hover:bg-accent hover:shadow-md">
+                  <Card className="h-full cursor-pointer border-border/80 transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
                     <CardHeader>
-                      <CardTitle className="text-lg">{group.name}</CardTitle>
+                      <CardTitle>{group.name}</CardTitle>
                       {group.description && (
                         <CardDescription className="line-clamp-2">
                           {group.description}
@@ -256,10 +266,14 @@ export default function HomePage() {
                     <CardContent>
                       <div className="flex gap-2">
                         {group.member_count !== undefined && (
-                          <Badge variant="secondary">{group.member_count} 成员</Badge>
+                          <Badge className="border-transparent bg-accent text-accent-foreground">
+                            {group.member_count} 成员
+                          </Badge>
                         )}
                         {group.topics_count !== undefined && (
-                          <Badge variant="outline">{group.topics_count} 帖子</Badge>
+                          <Badge className="border-transparent bg-ochre/12 text-ochre">
+                            {group.topics_count} 帖子
+                          </Badge>
                         )}
                       </div>
                     </CardContent>

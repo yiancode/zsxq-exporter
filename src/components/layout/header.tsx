@@ -6,11 +6,11 @@ import { Settings, Download, BarChart3, Sparkles } from 'lucide-react';
 
 export function Header() {
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-16 items-center">
         <div className="mr-4 flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold text-xl">ZSXQ Exporter</span>
+          <Link href="/" className="mr-8 flex items-center">
+            <span className="font-serif text-xl font-semibold tracking-tight">ZSXQ Exporter</span>
           </Link>
         </div>
         <nav className="flex items-center space-x-6 text-sm font-medium">

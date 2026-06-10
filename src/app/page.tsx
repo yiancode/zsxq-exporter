@@ -9,7 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/store/auth-store';
 import { toast } from 'sonner';
-import { Download, BarChart3, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  Download,
+  BarChart3,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
+  KeyRound,
+  ArrowRight,
+} from 'lucide-react';
 import Link from 'next/link';
 
 interface Group {
@@ -19,6 +27,28 @@ interface Group {
   member_count?: number;
   topics_count?: number;
 }
+
+// 功能入口配置（导出 / 分析 / 生成）
+const FEATURES = [
+  {
+    href: '/export',
+    icon: Download,
+    title: '导出内容',
+    description: '选择时间范围，将星球帖子导出为 Markdown 文件，包含图片',
+  },
+  {
+    href: '/analyze',
+    icon: BarChart3,
+    title: '内容分析',
+    description: '使用 AI 分析内容，生成复盘报告、关键词提取、趋势分析',
+  },
+  {
+    href: '/generate',
+    icon: Sparkles,
+    title: '智能生成',
+    description: '基于历史内容风格，生成年度总结、月度复盘或新帖子',
+  },
+] as const;
 
 export default function HomePage() {
   const { token, setToken, isAuthenticated, clearToken } = useAuthStore();
@@ -103,53 +133,36 @@ export default function HomePage() {
   const isLoggedIn = mounted && isAuthenticated();
 
   return (
-    <div className="container mx-auto max-w-5xl py-12">
-      {/* 编辑风开场 —— 衬线标题 + 一句副文 */}
-      <header className="mb-10">
-        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-          把你的星球，存成可读的文字
-        </h1>
-        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
-          导出知识星球帖子为 Markdown，再用 AI 帮你复盘、提炼、续写。像整理一本属于自己的合集。
-        </p>
-      </header>
+    <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-12">
+      <h1 className="sr-only">ZSXQ Exporter — 连接、导出与分析你的知识星球</h1>
 
-      {/* Token 输入区域 - mounted 前显示骨架屏避免 hydration 不匹配 */}
+      {/* 顶部状态区：未连接显示连接卡，已连接显示连接状态条 */}
       {!mounted ? (
-        <Card className="mb-8">
+        <Card className="shadow-none">
           <CardHeader>
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="h-7 w-40" />
+            <Skeleton className="mt-2 h-4 w-72" />
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <Skeleton className="h-10 flex-1" />
-              <Skeleton className="h-10 w-20" />
-            </div>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-10 w-28" />
           </CardContent>
         </Card>
       ) : !isLoggedIn ? (
-        <Card className="mb-8">
+        <Card className="shadow-none md:py-8">
           <CardHeader>
-            <CardTitle>连接知识星球</CardTitle>
-            <CardDescription>
-              请输入你的知识星球 Token 以开始使用。
-              <a
-                href="https://github.com/your-repo/zsxq-exporter#get-token"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-1 text-primary hover:underline"
-              >
-                如何获取 Token?
-              </a>
+            <CardTitle className="text-2xl">连接知识星球</CardTitle>
+            <CardDescription className="text-base leading-relaxed">
+              输入你的知识星球 Token 以安全访问并导出星球数据。数据仅在本地处理，不会上传至任何服务器。
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="token" className="sr-only">
-                  Token
-                </Label>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="token" className="sr-only">
+                Token
+              </Label>
+              <div className="relative">
+                <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="token"
                   type="password"
@@ -157,27 +170,44 @@ export default function HomePage() {
                   value={inputToken}
                   onChange={(e) => setInputToken(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
+                  className="h-12 pl-10 text-base"
                 />
               </div>
-              <Button onClick={handleConnect} disabled={loading}>
-                {loading ? '连接中...' : '连接'}
-              </Button>
+              <a
+                href="https://github.com/your-repo/zsxq-exporter#get-token"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-primary"
+              >
+                如何获取 Token?
+              </a>
             </div>
             {error && (
-              <p className="mt-2 text-sm text-destructive flex items-center gap-1">
-                <AlertCircle className="h-4 w-4" />
+              <p className="flex items-center gap-1 text-sm text-destructive">
+                <AlertCircle className="size-4" />
                 {error}
               </p>
             )}
+            <Button
+              onClick={handleConnect}
+              disabled={loading}
+              className="w-full md:w-auto"
+            >
+              {loading ? (
+                '连接中...'
+              ) : (
+                <>
+                  连接
+                  <ArrowRight className="size-4" />
+                </>
+              )}
+            </Button>
           </CardContent>
         </Card>
-      ) : null}
-
-      {/* 已连接状态 */}
-      {isLoggedIn && (
-        <div className="mb-8 flex items-center justify-between">
+      ) : (
+        <div className="flex items-center justify-between rounded-xl border bg-card px-5 py-4">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-primary" />
+            <CheckCircle2 className="size-5 text-primary" />
             <span className="text-sm text-muted-foreground">已连接知识星球</span>
           </div>
           <Button
@@ -193,103 +223,115 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 功能入口 */}
-      <div className="grid gap-6 md:grid-cols-3 mb-8">
-        <Link href="/export">
-          <Card className="group h-full cursor-pointer border-border/80 transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
-            <CardHeader>
-              <Download className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>导出内容</CardTitle>
-              <CardDescription>
-                选择时间范围，将星球帖子导出为 Markdown 文件，包含图片
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
+      {/* 功能入口：圆形图标徽章 + 衬线标题，hover 背景微移（不抬升） */}
+      <section className="grid gap-6 md:grid-cols-3">
+        {FEATURES.map(({ href, icon: Icon, title, description }) => (
+          <Link
+            key={href}
+            href={href}
+            className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <Card className="h-full cursor-pointer shadow-none transition-colors group-hover:bg-muted/50">
+              <CardHeader className="gap-4">
+                <span className="flex size-11 items-center justify-center rounded-full bg-accent text-primary transition-transform duration-200 group-hover:scale-110">
+                  <Icon className="size-5" />
+                </span>
+                <div className="space-y-1.5">
+                  <CardTitle className="text-xl">{title}</CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    {description}
+                  </CardDescription>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+        ))}
+      </section>
 
-        <Link href="/analyze">
-          <Card className="group h-full cursor-pointer border-border/80 transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
-            <CardHeader>
-              <BarChart3 className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>内容分析</CardTitle>
-              <CardDescription>
-                使用 AI 分析内容，生成复盘报告、关键词提取、趋势分析
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
+      {/* 我的星球：常驻区块，未连接时显示淡化占位 */}
+      <section className="space-y-5">
+        <h2 className="font-serif text-2xl font-semibold tracking-tight">我的星球</h2>
 
-        <Link href="/generate">
-          <Card className="group h-full cursor-pointer border-border/80 transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
-            <CardHeader>
-              <Sparkles className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>智能生成</CardTitle>
-              <CardDescription>
-                基于历史内容风格，生成年度总结、月度复盘或新帖子
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
-      </div>
-
-      {/* 星球列表 */}
-      {isLoggedIn && (
-        <div>
-          <h2 className="mb-5 text-2xl font-semibold tracking-tight">我的星球</h2>
-          {loading ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <Card key={i}>
+        {!isLoggedIn ? (
+          <>
+            <div className="pointer-events-none grid gap-4 opacity-50 md:grid-cols-2">
+              {[1, 2].map((i) => (
+                <Card key={i} className="shadow-none">
                   <CardHeader>
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full mt-2" />
+                    <Skeleton className="size-12 rounded-full" />
+                    <Skeleton className="mt-2 h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
                   </CardHeader>
                   <CardContent>
-                    <Skeleton className="h-4 w-1/2" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          ) : groups.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {groups.map((group) => (
-                <Link key={group.group_id} href={`/export?groupId=${group.group_id}`}>
-                  <Card className="h-full cursor-pointer border-border/80 transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
-                    <CardHeader>
-                      <CardTitle>{group.name}</CardTitle>
-                      {group.description && (
-                        <CardDescription className="line-clamp-2">
-                          {group.description}
-                        </CardDescription>
+            <p className="text-center text-sm text-muted-foreground">
+              连接 Token 后将在此处显示你加入的星球
+            </p>
+          </>
+        ) : loading ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {[1, 2].map((i) => (
+              <Card key={i} className="shadow-none">
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="mt-2 h-4 w-full" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-1/2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : groups.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {groups.map((group) => (
+              <Link
+                key={group.group_id}
+                href={`/export?groupId=${group.group_id}`}
+                className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <Card className="h-full cursor-pointer shadow-none transition-colors group-hover:bg-muted/50">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{group.name}</CardTitle>
+                    {group.description && (
+                      <CardDescription className="line-clamp-2">
+                        {group.description}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2">
+                      {group.member_count !== undefined && (
+                        <Badge className="border-transparent bg-accent text-accent-foreground">
+                          {group.member_count} 成员
+                        </Badge>
                       )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex gap-2">
-                        {group.member_count !== undefined && (
-                          <Badge className="border-transparent bg-accent text-accent-foreground">
-                            {group.member_count} 成员
-                          </Badge>
-                        )}
-                        {group.topics_count !== undefined && (
-                          <Badge className="border-transparent bg-ochre/12 text-ochre">
-                            {group.topics_count} 帖子
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                暂无星球数据，请检查 Token 是否有效
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+                      {group.topics_count !== undefined && (
+                        <Badge className="border-transparent bg-ochre/12 text-ochre">
+                          {group.topics_count} 帖子
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <Card className="shadow-none">
+            <CardContent className="py-8 text-center text-muted-foreground">
+              暂无星球数据，请检查 Token 是否有效
+            </CardContent>
+          </Card>
+        )}
+      </section>
     </div>
   );
 }

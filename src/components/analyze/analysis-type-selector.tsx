@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { ClipboardList, Hash, MessageSquare, Lightbulb } from 'lucide-react';
 
 export type AnalysisType = 'review' | 'keywords' | 'topics' | 'insights';
@@ -57,46 +57,46 @@ export function AnalysisTypeSelector({
   disabled = false,
 }: AnalysisTypeSelectorProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {analysisTypes.map((option) => (
-        <Card
-          key={option.type}
-          className={cn(
-            'cursor-pointer transition-all hover:shadow-md',
-            value === option.type && 'ring-2 ring-primary',
-            disabled && 'opacity-50 cursor-not-allowed'
-          )}
-          onClick={() => !disabled && onChange(option.type)}
-        >
-          <CardHeader className="pb-2">
-            <div className="flex items-start justify-between">
-              <div className={cn(
-                'p-2 rounded-lg',
-                value === option.type ? 'bg-primary text-primary-foreground' : 'bg-muted'
-              )}>
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {analysisTypes.map((option) => {
+        const active = value === option.type;
+        return (
+          <Card
+            key={option.type}
+            role="button"
+            tabIndex={disabled ? -1 : 0}
+            aria-pressed={active}
+            aria-disabled={disabled}
+            className={cn(
+              'cursor-pointer p-6 text-center shadow-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              active ? 'border-primary ring-1 ring-primary' : 'hover:bg-muted/50',
+              disabled && 'cursor-not-allowed opacity-50'
+            )}
+            onClick={() => !disabled && onChange(option.type)}
+            onKeyDown={(e) => {
+              if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                onChange(option.type);
+              }
+            }}
+          >
+            <div className="flex flex-col items-center">
+              <span
+                className={cn(
+                  'mb-4 flex size-12 items-center justify-center rounded-full transition-colors',
+                  active ? 'bg-primary text-primary-foreground' : 'bg-accent text-primary'
+                )}
+              >
                 {option.icon}
-              </div>
-              {value === option.type && (
-                <div className="h-2 w-2 rounded-full bg-primary" />
-              )}
+              </span>
+              <CardTitle className="text-lg">{option.title}</CardTitle>
+              <CardDescription className="mt-1.5 leading-relaxed">
+                {option.description}
+              </CardDescription>
             </div>
-            <CardTitle className="text-lg">{option.title}</CardTitle>
-            <CardDescription>{option.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-1">
-              {option.features.map((feature, i) => (
-                <span
-                  key={i}
-                  className="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground"
-                >
-                  {feature}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }

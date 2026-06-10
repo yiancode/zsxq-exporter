@@ -265,7 +265,7 @@ export function ContentSelector({
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-muted-foreground">{topic.date}</span>
                             {topic.digested && (
-                              <span className="text-yellow-600 flex items-center gap-0.5">
+                              <span className="text-ochre flex items-center gap-0.5">
                                 <Star className="h-3 w-3" />
                                 精华
                               </span>

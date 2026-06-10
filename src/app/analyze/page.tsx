@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { BarChart3, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 import { toast } from 'sonner';
@@ -92,10 +92,10 @@ export default function AnalyzePage() {
   // 未 mounted 时显示加载状态避免 hydration 不匹配
   if (!mounted) {
     return (
-      <div className="container py-8">
-        <Card>
+      <div className="mx-auto max-w-4xl px-6 py-12">
+        <Card className="shadow-none">
           <CardContent className="py-8 text-center">
-            <Loader2 className="h-12 w-12 mx-auto text-muted-foreground mb-4 animate-spin" />
+            <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-muted-foreground" />
             <p className="text-muted-foreground">加载中...</p>
           </CardContent>
         </Card>
@@ -106,11 +106,11 @@ export default function AnalyzePage() {
   // 未认证状态
   if (!isLoggedIn) {
     return (
-      <div className="container py-8">
-        <Card>
+      <div className="mx-auto max-w-4xl px-6 py-12">
+        <Card className="shadow-none">
           <CardContent className="py-8 text-center">
-            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">请先连接知识星球</p>
+            <AlertCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="mb-4 text-muted-foreground">请先连接知识星球</p>
             <Link href="/">
               <Button>返回首页</Button>
             </Link>
@@ -123,73 +123,31 @@ export default function AnalyzePage() {
   const canStartAnalysis = selection && analysisType;
 
   return (
-    <div className="container py-8">
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          返回首页
-        </Link>
-      </div>
-
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <BarChart3 className="h-6 w-6" />
-          内容分析
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          使用 AI 分析导出的内容，生成复盘报告、关键词提取等
+    <div className="mx-auto flex max-w-4xl flex-col gap-12 px-6 py-12">
+      {/* 居中页头 */}
+      <header className="text-center">
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">内容分析</h1>
+        <p className="mt-3 text-lg text-muted-foreground">
+          深度解析知识星球内容，提炼核心价值
         </p>
-      </div>
+      </header>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* 左侧：设置面板 */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* 内容选择 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">1. 选择内容</CardTitle>
-              <CardDescription>选择要分析的星球和时间范围</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ContentSelector
-                groups={groups}
-                onSelectionChange={handleSelectionChange}
-                disabled={loading}
-              />
-            </CardContent>
-          </Card>
+      {/* 分析能力卡（选择分析类型） */}
+      <AnalysisTypeSelector value={analysisType} onChange={handleAnalysisTypeChange} />
 
-          {/* 分析类型 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">2. 选择分析类型</CardTitle>
-              <CardDescription>选择你想要的分析方式</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AnalysisTypeSelector
-                value={analysisType}
-                onChange={handleAnalysisTypeChange}
-                disabled={!selection}
-              />
-            </CardContent>
-          </Card>
-
-          {/* AI 服务选择 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">3. 选择 AI 服务</CardTitle>
-              <CardDescription>选择用于分析的 AI 模型</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ProviderSelector
-                value={provider}
-                onChange={setProvider}
-                disabled={!selection}
-              />
-            </CardContent>
-          </Card>
-
-          {/* 开始分析按钮 */}
+      {/* 分析设置：内容来源 + AI 服务 + 开始分析 */}
+      <Card className="shadow-none">
+        <CardHeader className="border-b">
+          <CardTitle className="text-xl">分析设置</CardTitle>
+          <CardDescription>选择要分析的星球内容与 AI 服务</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <ContentSelector
+            groups={groups}
+            onSelectionChange={handleSelectionChange}
+            disabled={loading}
+          />
+          <ProviderSelector value={provider} onChange={setProvider} />
           <Button
             size="lg"
             className="w-full"
@@ -199,18 +157,16 @@ export default function AnalyzePage() {
             <BarChart3 className="mr-2 h-4 w-4" />
             开始分析
           </Button>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* 右侧：结果面板 */}
-        <div className="lg:col-span-3">
-          <AnalysisResult
-            key={analysisKey}
-            selection={selection}
-            analysisType={analysisType}
-            provider={provider}
-          />
-        </div>
-      </div>
+      {/* 结果文章 */}
+      <AnalysisResult
+        key={analysisKey}
+        selection={selection}
+        analysisType={analysisType}
+        provider={provider}
+      />
     </div>
   );
 }

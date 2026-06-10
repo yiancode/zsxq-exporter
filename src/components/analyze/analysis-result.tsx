@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
@@ -14,6 +13,7 @@ import {
   AlertCircle,
   RotateCcw,
   FileText,
+  Sparkles,
 } from 'lucide-react';
 import type { ContentSelection } from './content-selector';
 import type { AnalysisType } from './analysis-type-selector';
@@ -47,13 +47,13 @@ export function AnalysisResult({
   const [content, setContent] = useState('');
   const [meta, setMeta] = useState<MetaInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // 自动滚动到底部
+  // 流式输出时自动滚动到底部
   useEffect(() => {
-    if (scrollRef.current && status === 'streaming') {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (status === 'streaming') {
+      bottomRef.current?.scrollIntoView({ block: 'end' });
     }
   }, [content, status]);
 
@@ -197,12 +197,14 @@ export function AnalysisResult({
   // 空状态
   if (status === 'idle' && !content) {
     return (
-      <Card className="h-full">
-        <CardContent className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
-          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">准备开始分析</h3>
-          <p className="text-muted-foreground text-sm max-w-sm">
-            选择星球内容和分析类型后，AI 将自动开始分析并在这里展示结果
+      <Card className="shadow-none">
+        <CardContent className="flex min-h-[280px] flex-col items-center justify-center text-center">
+          <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-accent text-primary">
+            <FileText className="size-6" />
+          </span>
+          <h3 className="mb-2 font-serif text-lg font-semibold">准备开始分析</h3>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            选择分析类型与星球内容后，AI 将自动开始分析并在这里展示结果
           </p>
         </CardContent>
       </Card>
@@ -210,59 +212,59 @@ export function AnalysisResult({
   }
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="flex-none pb-3">
-        <div className="flex items-start justify-between">
+    <Card className="shadow-none">
+      <CardHeader className="border-b">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
               分析结果
               {status === 'loading' && (
                 <Badge variant="secondary">
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                   准备中
                 </Badge>
               )}
               {status === 'streaming' && (
                 <Badge variant="secondary">
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                   分析中
                 </Badge>
               )}
               {status === 'completed' && (
-                <Badge variant="default" className="bg-green-600">
-                  <CheckCircle className="h-3 w-3 mr-1" />
+                <Badge>
+                  <CheckCircle className="mr-1 h-3 w-3" />
                   完成
                 </Badge>
               )}
               {status === 'error' && (
                 <Badge variant="destructive">
-                  <AlertCircle className="h-3 w-3 mr-1" />
+                  <AlertCircle className="mr-1 h-3 w-3" />
                   错误
                 </Badge>
               )}
             </CardTitle>
             {meta && (
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1.5 text-sm text-muted-foreground">
                 {meta.groupName} · {meta.period} · {meta.topicCount} 条帖子
               </p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2">
             {content && (
               <>
                 <Button variant="outline" size="sm" onClick={handleCopy}>
-                  <Copy className="h-4 w-4 mr-1" />
+                  <Copy className="h-4 w-4" />
                   复制
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleDownload}>
-                  <Download className="h-4 w-4 mr-1" />
+                  <Download className="h-4 w-4" />
                   下载
                 </Button>
               </>
             )}
             {(status === 'completed' || status === 'error') && (
               <Button variant="outline" size="sm" onClick={handleRetry}>
-                <RotateCcw className="h-4 w-4 mr-1" />
+                <RotateCcw className="h-4 w-4" />
                 重新分析
               </Button>
             )}
@@ -270,34 +272,40 @@ export function AnalysisResult({
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 overflow-hidden">
+      <CardContent className="md:px-8">
         {status === 'error' ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-lg font-medium mb-2">分析失败</h3>
-            <p className="text-muted-foreground text-sm mb-4">{error}</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <AlertCircle className="mb-4 h-12 w-12 text-destructive" />
+            <h3 className="mb-2 text-lg font-medium">分析失败</h3>
+            <p className="mb-4 text-sm text-muted-foreground">{error}</p>
             <Button onClick={handleRetry}>
-              <RotateCcw className="h-4 w-4 mr-2" />
+              <RotateCcw className="mr-2 h-4 w-4" />
               重试
             </Button>
           </div>
+        ) : status === 'loading' && !content ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
         ) : (
-          <ScrollArea className="h-full" ref={scrollRef}>
-            <div className="prose prose-sm dark:prose-invert max-w-none pr-4">
-              {status === 'loading' && !content ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <div className="whitespace-pre-wrap">{content}</div>
-              )}
-              {status === 'streaming' && (
-                <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-0.5" />
-              )}
-            </div>
-          </ScrollArea>
+          <div className="text-base leading-relaxed break-words whitespace-pre-wrap text-foreground">
+            {content}
+            {status === 'streaming' && (
+              <span className="ml-0.5 inline-block h-4 w-2 animate-pulse bg-primary align-middle" />
+            )}
+            <div ref={bottomRef} />
+          </div>
         )}
       </CardContent>
+
+      {content && status !== 'error' && (
+        <CardFooter className="border-t text-sm text-muted-foreground">
+          <span className="ml-auto flex items-center gap-1">
+            <Sparkles className="size-3.5" />
+            由 Claude 生成
+          </span>
+        </CardFooter>
+      )}
     </Card>
   );
 }

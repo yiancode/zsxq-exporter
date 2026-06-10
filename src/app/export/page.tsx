@@ -9,12 +9,10 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/store/auth-store';
 import { toast } from 'sonner';
-import { CalendarIcon, Download, Loader2, ArrowLeft, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { CalendarIcon, Download, Loader2, FileArchive, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import Link from 'next/link';
@@ -58,7 +56,6 @@ function ExportPageContent() {
   const [scope, setScope] = useState<'all' | 'digests'>('all');
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [currentExportId, setCurrentExportId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [progressText, setProgressText] = useState('');
   const [exportHistory, setExportHistory] = useState<ExportRecord[]>([]);
@@ -215,7 +212,6 @@ function ExportPageContent() {
       }
 
       const data = await response.json();
-      setCurrentExportId(data.exportId);
       setProgressText('正在获取帖子...');
 
       // 开始轮询进度
@@ -234,11 +230,11 @@ function ExportPageContent() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-primary" />;
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       default:
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-ochre" />;
     }
   };
 
@@ -302,10 +298,10 @@ function ExportPageContent() {
   // 未 mounted 时显示加载状态避免 hydration 不匹配
   if (!mounted) {
     return (
-      <div className="container py-8">
-        <Card>
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <Card className="shadow-none">
           <CardContent className="py-8 text-center">
-            <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
           </CardContent>
         </Card>
       </div>
@@ -314,10 +310,10 @@ function ExportPageContent() {
 
   if (!isLoggedIn) {
     return (
-      <div className="container py-8">
-        <Card>
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <Card className="shadow-none">
           <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground mb-4">请先连接知识星球</p>
+            <p className="mb-4 text-muted-foreground">请先连接知识星球</p>
             <Link href="/">
               <Button>返回首页</Button>
             </Link>
@@ -328,180 +324,171 @@ function ExportPageContent() {
   }
 
   return (
-    <div className="container py-8">
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          返回首页
-        </Link>
-      </div>
+    <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-12">
+      {/* 页头 */}
+      <header>
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">数据归档</h1>
+        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+          将你在知识星球的碎片化阅读，沉淀为系统性的私人数字资产。
+        </p>
+      </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* 导出表单 */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                导出内容
-              </CardTitle>
-              <CardDescription>
-                选择星球和时间范围，将帖子导出为 Markdown 文件
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* 星球选择 */}
-              <div className="space-y-2">
-                <Label>选择星球</Label>
-                <Select value={selectedGroup} onValueChange={setSelectedGroup} disabled={loading || exporting}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={loading ? '加载中...' : '请选择星球'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groups.map((group) => (
-                      <SelectItem key={group.group_id} value={group.group_id}>
-                        {group.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* 导出设置 */}
+      <Card className="shadow-none">
+        <CardHeader className="border-b">
+          <CardTitle className="text-xl">导出设置</CardTitle>
+          <CardDescription>选择星球和时间范围，将帖子导出为 Markdown 文件</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* 星球选择 */}
+          <div className="space-y-2">
+            <Label>选择星球</Label>
+            <Select value={selectedGroup} onValueChange={setSelectedGroup} disabled={loading || exporting}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={loading ? '加载中...' : '请选择要导出的星球...'} />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((group) => (
+                  <SelectItem key={group.group_id} value={group.group_id}>
+                    {group.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* 时间范围 */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>开始日期</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={exporting}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, 'yyyy-MM-dd', { locale: zhCN }) : '选择日期'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={setStartDate}
-                        locale={zhCN}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+          {/* 时间范围 */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>开始日期</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={exporting}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, 'yyyy-MM-dd', { locale: zhCN }) : '选择日期'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    locale={zhCN}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
 
-                <div className="space-y-2">
-                  <Label>结束日期</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={exporting}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, 'yyyy-MM-dd', { locale: zhCN }) : '选择日期'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={setEndDate}
-                        locale={zhCN}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label>结束日期</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={exporting}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, 'yyyy-MM-dd', { locale: zhCN }) : '选择日期'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    locale={zhCN}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
 
-              {/* 导出范围 */}
-              <div className="space-y-2">
-                <Label>导出范围</Label>
-                <Select value={scope} onValueChange={(v) => setScope(v as 'all' | 'digests')} disabled={exporting}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部帖子</SelectItem>
-                    <SelectItem value="digests">仅精华</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* 导出范围 */}
+          <div className="space-y-2">
+            <Label>导出范围</Label>
+            <Select value={scope} onValueChange={(v) => setScope(v as 'all' | 'digests')} disabled={exporting}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部内容（主题、评论、附件）</SelectItem>
+                <SelectItem value="digests">仅精华内容</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* 进度条 */}
-              {exporting && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{progressText}</span>
-                    <span>{progress}%</span>
+          {/* 导出按钮 */}
+          <Button onClick={handleExport} disabled={exporting} className="mt-2 w-full">
+            {exporting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                导出中...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                开始导出
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* 导出进度（进行中显示） */}
+      {exporting && (
+        <Card className="shadow-none">
+          <CardContent className="space-y-2">
+            <div className="flex items-end justify-between">
+              <span className="text-sm text-muted-foreground">{progressText}</span>
+              <span className="text-sm font-bold text-primary">{progress}%</span>
+            </div>
+            <Progress value={progress} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 导出结果 */}
+      <Card className="shadow-none">
+        <CardHeader className="border-b">
+          <CardTitle className="text-xl">导出结果</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {exportHistory.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">暂无导出记录</p>
+          ) : (
+            <ul className="space-y-3">
+              {exportHistory.map((record) => (
+                <li
+                  key={record.export_id}
+                  className="flex items-center justify-between gap-4 rounded-lg border bg-background p-4 transition-colors hover:border-primary/30"
+                >
+                  <div className="flex min-w-0 items-center gap-4">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
+                      <FileArchive className="size-5" />
+                    </span>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-medium text-foreground">{record.group_name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {record.start_date?.slice(0, 10)} ~ {record.end_date?.slice(0, 10)} · {record.topic_count} 条 · {getStatusText(record.status)}
+                      </span>
+                    </div>
                   </div>
-                  <Progress value={progress} />
-                </div>
-              )}
-
-              {/* 导出按钮 */}
-              <Button onClick={handleExport} disabled={exporting} className="w-full">
-                {exporting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    导出中...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    开始导出
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 导出历史 */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">导出历史</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {exportHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  暂无导出记录
-                </p>
-              ) : (
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
-                    {exportHistory.map((record, index) => (
-                      <div key={record.export_id}>
-                        <div className="flex items-start gap-2">
-                          {getStatusIcon(record.status)}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{record.group_name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {record.start_date?.slice(0, 10)} ~ {record.end_date?.slice(0, 10)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {record.topic_count} 条帖子 · {getStatusText(record.status)}
-                            </p>
-                            {record.status === 'completed' && record.file_path && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-xs"
-                                onClick={() => handleDownload(record.export_id)}
-                              >
-                                <Download className="mr-1 h-3 w-3" />
-                                下载
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        {index < exportHistory.length - 1 && <Separator className="mt-3" />}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                  {record.status === 'completed' && record.file_path ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => handleDownload(record.export_id)}
+                    >
+                      <Download className="size-4" />
+                      下载
+                    </Button>
+                  ) : (
+                    <span className="shrink-0">{getStatusIcon(record.status)}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -509,36 +496,33 @@ function ExportPageContent() {
 // 加载骨架屏
 function ExportPageSkeleton() {
   return (
-    <div className="container py-8">
-      <div className="mb-6">
-        <Skeleton className="h-4 w-20" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-12">
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-5 w-80" />
       </div>
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-64 mt-2" />
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Skeleton className="h-10 w-full" />
-              <div className="grid gap-4 md:grid-cols-2">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-        </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-24" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-40 w-full" />
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="shadow-none">
+        <CardHeader className="border-b">
+          <Skeleton className="h-6 w-32" />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Skeleton className="h-10 w-full" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+      <Card className="shadow-none">
+        <CardHeader className="border-b">
+          <Skeleton className="h-6 w-24" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-16 w-full" />
+        </CardContent>
+      </Card>
     </div>
   );
 }
